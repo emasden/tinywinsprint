@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TinyWinsPrint — Digital Tools</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#faf8f2;--surface:#fff;--border:#e8e2d4;
+  --sage:#8fa882;--blue:#7a9ab5;--gold:#e8a830;
+  --text:#1a1a1a;--muted:#7a7060;
+  --font-h:'DM Serif Display',serif;--font-b:'DM Sans',sans-serif;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--font-b);min-height:100vh}
+
+/* ── HERO ── */
+.hero{text-align:center;padding:64px 20px 48px;background:linear-gradient(180deg,#fff 0%,var(--bg) 100%)}
+.logo-wrap{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:28px}
+.logo-circle{width:72px;height:72px;border-radius:50%;background:#f5f0e8;border:2.5px solid var(--sage);display:flex;align-items:center;justify-content:center;flex-direction:column;flex-shrink:0;position:relative}
+.logo-t{font-family:var(--font-h);font-size:2rem;color:var(--sage);line-height:1;position:absolute;left:12px;top:10px}
+.logo-w{font-family:var(--font-h);font-size:1.7rem;color:var(--blue);line-height:1;position:absolute;right:8px;bottom:12px}
+.logo-star{position:absolute;top:6px;right:14px;font-size:1rem}
+.brand-name{font-family:var(--font-h);font-size:1.6rem;line-height:1}
+.brand-name span:first-child{color:var(--sage)}
+.brand-name span:last-child{color:var(--blue)}
+.hero h1{font-family:var(--font-h);font-size:clamp(2rem,5vw,3rem);color:var(--text);margin-bottom:14px;line-height:1.2}
+.hero h1 em{color:var(--sage);font-style:italic}
+.hero p{font-size:15px;color:var(--muted);max-width:480px;margin:0 auto;line-height:1.7}
+
+/* ── PRODUCTS GRID ── */
+.products{max-width:900px;margin:0 auto;padding:20px 20px 60px;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px}
+
+.product-card{background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:28px 24px;display:flex;flex-direction:column;gap:14px;transition:all .2s;cursor:pointer;text-decoration:none;color:inherit;position:relative;overflow:hidden}
+.product-card:hover{border-color:var(--sage);box-shadow:0 8px 32px rgba(143,168,130,.15);transform:translateY(-2px)}
+.product-card.coming-soon{opacity:.6;cursor:default}
+.product-card.coming-soon:hover{transform:none;box-shadow:none;border-color:var(--border)}
+
+.product-icon{width:52px;height:52px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.5rem}
+.icon-budget{background:color-mix(in srgb,var(--sage) 15%,transparent)}
+.icon-resume{background:color-mix(in srgb,var(--blue) 15%,transparent)}
+.icon-chore{background:color-mix(in srgb,var(--gold) 15%,transparent)}
+
+.product-title{font-family:var(--font-h);font-size:1.2rem;color:var(--text)}
+.product-desc{font-size:13px;color:var(--muted);line-height:1.6}
+.product-features{display:flex;flex-direction:column;gap:5px}
+.feature{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted)}
+.feature::before{content:'✓';color:var(--sage);font-weight:700;flex-shrink:0}
+
+.product-btn{margin-top:auto;padding:11px 0;border-radius:8px;border:none;font-family:var(--font-b);font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;text-align:center;text-decoration:none;display:block}
+.btn-active{background:var(--sage);color:#fff}
+.btn-active:hover{background:#7a9872}
+.btn-coming{background:var(--border);color:var(--muted);cursor:default}
+
+.badge{position:absolute;top:14px;right:14px;padding:3px 10px;border-radius:99px;font-size:10px;font-weight:700;letter-spacing:.05em}
+.badge-new{background:color-mix(in srgb,var(--sage) 15%,transparent);color:var(--sage)}
+.badge-soon{background:color-mix(in srgb,var(--muted) 12%,transparent);color:var(--muted)}
+
+/* ── INSTALL GUIDE ── */
+.install-section{background:#fff;border-top:1px solid var(--border);padding:48px 20px}
+.install-section h2{font-family:var(--font-h);font-size:1.8rem;text-align:center;margin-bottom:8px}
+.install-section .sub{text-align:center;color:var(--muted);font-size:14px;margin-bottom:36px}
+.steps{max-width:700px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:20px}
+.step{text-align:center;padding:20px 14px}
+.step-num{width:36px;height:36px;border-radius:50%;background:var(--sage);color:#fff;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px}
+.step-title{font-weight:700;font-size:13px;margin-bottom:5px}
+.step-desc{font-size:12px;color:var(--muted);line-height:1.5}
+
+/* ── FOOTER ── */
+footer{text-align:center;padding:24px;font-size:12px;color:var(--muted);border-top:1px solid var(--border)}
+footer a{color:var(--sage);text-decoration:none}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="logo-wrap">
+    <div class="logo-circle">
+      <span class="logo-t">t</span>
+      <span class="logo-w">w</span>
+      <span class="logo-star">✦</span>
+    </div>
+    <div class="brand-name"><span>tinyWins</span><span>Print</span></div>
+  </div>
+  <h1>Beautiful tools for your <em>tiny wins</em></h1>
+  <p>Interactive digital planners that work like apps — install on any device, use offline, print anytime.</p>
+</div>
+
+<div class="products">
+
+  <!-- BUDGET PLANNER -->
+  <a class="product-card" href="./budget-planner/">
+    <span class="badge badge-new">NEW</span>
+    <div class="product-icon icon-budget">💰</div>
+    <div class="product-title">Ultimate Budget Planner</div>
+    <div class="product-desc">Complete financial dashboard with transactions, debt snowball, goal tracker & more.</div>
+    <div class="product-features">
+      <div class="feature">Dashboard with live donut charts</div>
+      <div class="feature">Debt snowball payoff calculator</div>
+      <div class="feature">Bill tracker & savings goals</div>
+      <div class="feature">Goal tracker by area of life</div>
+      <div class="feature">4 themes · Print · PDF export</div>
+      <div class="feature">Works offline after install</div>
+    </div>
+    <div class="product-btn btn-active">Open Budget Planner →</div>
+  </a>
+
+  <!-- RESUME BUILDER - Coming Soon -->
+  <div class="product-card coming-soon">
+    <span class="badge badge-soon">COMING SOON</span>
+    <div class="product-icon icon-resume">📄</div>
+    <div class="product-title">Resume Builder</div>
+    <div class="product-desc">Professional resume builder with multiple templates — fill in, download as PDF instantly.</div>
+    <div class="product-features">
+      <div class="feature">Multiple professional templates</div>
+      <div class="feature">Fully customizable sections</div>
+      <div class="feature">One-click PDF download</div>
+      <div class="feature">ATS-friendly formatting</div>
+    </div>
+    <div class="product-btn btn-coming">Coming Soon</div>
+  </div>
+
+  <!-- CHORE CHART - Coming Soon -->
+  <div class="product-card coming-soon">
+    <span class="badge badge-soon">COMING SOON</span>
+    <div class="product-icon icon-chore">⭐</div>
+    <div class="product-title">Kids Chore & Rewards</div>
+    <div class="product-desc">Interactive chore chart and reward system that keeps kids motivated and on track.</div>
+    <div class="product-features">
+      <div class="feature">Custom chore lists per child</div>
+      <div class="feature">Star & reward tracking</div>
+      <div class="feature">Weekly & monthly views</div>
+      <div class="feature">Printable reward certificates</div>
+    </div>
+    <div class="product-btn btn-coming">Coming Soon</div>
+  </div>
+
+</div>
+
+<!-- HOW TO INSTALL -->
+<div class="install-section">
+  <h2>Install as an App</h2>
+  <p class="sub">Works on iPhone, Android, and desktop — no App Store needed</p>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-title">Open in Browser</div>
+      <div class="step-desc">Visit this page in Safari (iPhone) or Chrome (Android/Desktop)</div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-title">Tap Share / Menu</div>
+      <div class="step-desc">iPhone: tap the Share icon. Android/Desktop: tap the ⋮ menu or install icon in address bar</div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-title">Add to Home Screen</div>
+      <div class="step-desc">Tap "Add to Home Screen" — it installs like a real app with its own icon</div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-title">Use Offline!</div>
+      <div class="step-desc">Opens fullscreen, saves your work, and works without internet</div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  Made with ♥ by <a href="#">TinyWinsPrint</a> · 
+  <a href="https://www.etsy.com" target="_blank">Find us on Etsy</a>
+</footer>
+
+</body>
+</html>

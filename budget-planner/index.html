@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TinyWinsPrint Budget Planner</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0e1117">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Budget Planner">
+<link rel="apple-touch-icon" href="../icons/icon-192.png">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+/* ═══════════════════════════════════════
+   THEME VARIABLES
+═══════════════════════════════════════ */
+:root {
+  --bg:        #0e1117;
+  --surface:   #161b26;
+  --surface2:  #1e2535;
+  --surface3:  #252e42;
+  --border:    #2a3550;
+  --accent:    #f0a500;
+  --accent2:   #ffd166;
+  --teal:      #06d6a0;
+  --pink:      #ef476f;
+  --blue:      #4361ee;
+  --purple:    #7b5ea7;
+  --text:      #e8eaf0;
+  --muted:     #7a8499;
+  --dim:       #3a4560;
+  --green:     #06d6a0;
+  --red:       #ef476f;
+  --font-h:    'DM Serif Display', serif;
+  --font-b:    'DM Sans', sans-serif;
+  --r:         8px;
+  --shadow:    0 4px 24px rgba(0,0,0,.4);
+}
+body.sage {
+  --bg:#0d1610; --surface:#131f17; --surface2:#192b1e; --surface3:#1f3626;
+  --border:#2a4034; --accent:#a8d8a8; --accent2:#d4edda;
+  --teal:#52b788; --pink:#f4a261; --blue:#48cae4; --purple:#b5838d;
+  --text:#e8f0ea; --muted:#6b8f71; --dim:#2a4034;
+}
+body.copper {
+  --bg:#120e0a; --surface:#1c1510; --surface2:#271c14; --surface3:#32231a;
+  --border:#3d2b1f; --accent:#e07a5f; --accent2:#f2cc8f;
+  --teal:#81b29a; --pink:#e07a5f; --blue:#3d405b; --purple:#9a8c98;
+  --text:#f0ebe5; --muted:#8c7b6e; --dim:#3d2b1f;
+}
+body.glacier {
+  --bg:#08111e; --surface:#0d1929; --surface2:#122035; --surface3:#172840;
+  --border:#1e3452; --accent:#48cae4; --accent2:#90e0ef;
+  --teal:#48cae4; --pink:#f72585; --blue:#4361ee; --purple:#7209b7;
+  --text:#e0f0ff; --muted:#5a7a99; --dim:#1e3452;
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--font-b);font-size:13px;min-height:100vh;line-height:1.5}
+
+/* ── TOPBAR ── */
+.topbar{position:fixed;top:0;left:0;right:0;z-index:300;height:52px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px;padding:0 16px}
+.brand{font-family:var(--font-h);font-size:1.15rem;color:var(--accent);margin-right:8px;white-space:nowrap;letter-spacing:.02em}
+.nav-tabs{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+.nav-tabs::-webkit-scrollbar{display:none}
+.nt{padding:5px 12px;border-radius:6px;border:none;background:transparent;color:var(--muted);font-family:var(--font-b);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .18s}
+.nt.active,.nt:hover{background:var(--surface2);color:var(--text)}
+.nt.active{color:var(--accent)}
+.tbr{margin-left:auto;display:flex;gap:6px;align-items:center;flex-shrink:0}
+.thm{padding:4px 10px;border-radius:99px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:11px;font-weight:600;cursor:pointer;font-family:var(--font-b);transition:all .18s;white-space:nowrap}
+.thm.active,.thm:hover{background:var(--accent);color:#000;border-color:var(--accent)}
+.ibtn{padding:5px 14px;border-radius:6px;border:none;font-family:var(--font-b);font-size:11px;font-weight:700;cursor:pointer;transition:all .18s;white-space:nowrap}
+.ibtn-g{background:var(--surface2);color:var(--muted)}.ibtn-g:hover{color:var(--text)}
+.ibtn-p{background:var(--accent);color:#000}.ibtn-p:hover{filter:brightness(1.1)}
+
+/* ── PAGES ── */
+.page{display:none;max-width:1060px;margin:0 auto;padding:64px 16px 56px}
+.page.active{display:block}
+
+/* ── SECTION HEADER ── */
+.sec-label{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.sec-label::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* ── MONTH HEADER ── */
+.month-hero{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px 22px;margin-bottom:16px;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.month-name{font-family:var(--font-h);font-size:2rem;color:var(--accent);line-height:1;min-width:140px}
+.month-meta{display:flex;flex-direction:column;gap:4px}
+.month-range{font-size:11px;color:var(--muted)}
+.currency-row{display:flex;align-items:center;gap:8px;margin-left:auto;flex-wrap:wrap}
+.currency-row label{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:0}
+
+/* ── CARDS ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px;box-shadow:var(--shadow);margin-bottom:14px}
+.card-title{font-family:var(--font-h);font-size:.95rem;font-weight:400;margin-bottom:14px;color:var(--text);display:flex;align-items:center;gap:8px}
+.ct-bar{width:3px;height:16px;border-radius:2px;background:var(--accent);flex-shrink:0}
+
+/* ── GRIDS ── */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+@media(max-width:720px){.g3,.g4{grid-template-columns:1fr 1fr}.g2{grid-template-columns:1fr}}
+
+/* ── STAT TILES ── */
+.tile{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:14px 12px;display:flex;flex-direction:column;gap:4px}
+.tile-label{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.tile-val{font-family:var(--font-h);font-size:1.55rem;line-height:1;color:var(--text)}
+.tile-val.g{color:var(--teal)}.tile-val.r{color:var(--pink)}.tile-val.a{color:var(--accent)}.tile-val.b{color:var(--blue)}
+.tile-sub{font-size:10px;color:var(--muted)}
+
+/* ── DONUT CHART (SVG) ── */
+.donut-wrap{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.donut-svg{flex-shrink:0;transform:rotate(-90deg)}
+.donut-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;transform:none}
+.donut-container{position:relative;width:120px;height:120px;flex-shrink:0}
+.donut-container svg{position:absolute;inset:0}
+.donut-pct{font-family:var(--font-h);font-size:1.3rem;color:var(--text);line-height:1}
+.donut-lbl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.legend{display:flex;flex-direction:column;gap:6px}
+.legend-item{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted)}
+.legend-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+
+/* ── BAR CHART ── */
+.bar-chart{display:flex;flex-direction:column;gap:8px}
+.bc-row{display:flex;align-items:center;gap:8px}
+.bc-label{width:90px;font-size:11px;color:var(--muted);text-align:right;flex-shrink:0}
+.bc-track{flex:1;height:8px;background:var(--dim);border-radius:99px;overflow:hidden;position:relative}
+.bc-fill{height:100%;border-radius:99px;transition:width .6s cubic-bezier(.4,0,.2,1)}
+.bc-fill.budgeted{opacity:.4}
+.bc-val{width:70px;font-size:11px;color:var(--muted);flex-shrink:0}
+
+/* ── INPUTS ── */
+label.lbl{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+input[type=text],input[type=number],input[type=month],input[type=date],select,textarea{width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-family:var(--font-b);font-size:12px;outline:none;transition:border-color .18s}
+input:focus,select:focus,textarea:focus{border-color:var(--accent)}
+textarea{resize:vertical;min-height:68px}
+
+/* ── TABLES ── */
+.tbl{width:100%;border-collapse:collapse;font-size:12px}
+.tbl th{text-align:left;font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--dim);padding:0 6px 8px;border-bottom:1px solid var(--border)}
+.tbl td{padding:6px 6px;vertical-align:middle;border-bottom:1px solid var(--border)}
+.tbl tr:last-child td{border-bottom:none}
+.tbl input[type=text],.tbl input[type=number],.tbl input[type=date]{padding:5px 8px;font-size:12px}
+.tbl select{padding:5px 8px;font-size:12px}
+.tbl-total{display:flex;justify-content:space-between;padding:8px 6px 0;border-top:1px solid var(--border);font-size:12px;font-weight:700;color:var(--muted);margin-top:4px}
+
+/* ── TYPE BADGE ── */
+.type-badge{padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700;letter-spacing:.04em}
+.tb-exp{background:color-mix(in srgb,var(--pink) 15%,transparent);color:var(--pink)}
+.tb-inc{background:color-mix(in srgb,var(--teal) 15%,transparent);color:var(--teal)}
+.tb-sav{background:color-mix(in srgb,var(--blue) 15%,transparent);color:var(--blue)}
+.tb-dbt{background:color-mix(in srgb,var(--purple) 15%,transparent);color:var(--purple)}
+
+/* ── PROGRESS ── */
+.prog-wrap{margin:6px 0}
+.prog-row{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:3px}
+.prog-track{height:6px;background:var(--dim);border-radius:99px;overflow:hidden}
+.prog-fill{height:100%;border-radius:99px;transition:width .5s}
+
+/* ── CHECKBOX ── */
+.chk{appearance:none;width:14px;height:14px;border:1.5px solid var(--border);border-radius:3px;cursor:pointer;flex-shrink:0;transition:all .15s;background:transparent;position:relative}
+.chk:checked{background:var(--teal);border-color:var(--teal)}
+.chk:checked::after{content:'✓';position:absolute;color:#000;font-size:9px;font-weight:900;top:50%;left:50%;transform:translate(-50%,-50%)}
+
+/* ── PILL ── */
+.pill{display:inline-flex;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700;letter-spacing:.04em}
+.p-g{background:color-mix(in srgb,var(--teal) 15%,transparent);color:var(--teal)}
+.p-r{background:color-mix(in srgb,var(--pink) 15%,transparent);color:var(--pink)}
+.p-a{background:color-mix(in srgb,var(--accent) 15%,transparent);color:var(--accent)}
+.p-b{background:color-mix(in srgb,var(--blue) 15%,transparent);color:var(--blue)}
+.p-p{background:color-mix(in srgb,var(--purple) 15%,transparent);color:var(--purple)}
+
+/* ── BUTTONS ── */
+.add-btn{width:100%;margin-top:8px;background:none;border:1px dashed var(--border);color:var(--muted);padding:6px;border-radius:6px;font-family:var(--font-b);font-size:11px;cursor:pointer;transition:all .18s}
+.add-btn:hover{border-color:var(--accent);color:var(--accent)}
+.del{background:none;border:none;color:var(--dim);cursor:pointer;font-size:12px;padding:3px 5px;border-radius:4px;line-height:1;transition:all .15s}
+.del:hover{color:var(--pink);background:color-mix(in srgb,var(--pink) 10%,transparent)}
+
+/* ── GOAL TRACKER ── */
+.goal-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:10px}
+.goal-header{display:flex;align-items:center;gap:8px}
+.goal-area{font-size:10px;font-weight:700;color:var(--accent);letter-spacing:.06em;text-transform:uppercase}
+.goal-title{font-size:13px;font-weight:600;color:var(--text)}
+.goal-steps{display:flex;flex-direction:column;gap:4px;margin-top:4px}
+.goal-step{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted)}
+
+/* ── SNOWBALL ── */
+.sb-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr 88px 30px;gap:6px;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)}
+.sb-head{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--dim);padding-bottom:8px;border-bottom:1px solid var(--border)}
+@media(max-width:680px){.sb-grid,.sb-head{grid-template-columns:1fr 1fr 1fr 30px}.sb-grid .hs,.sb-head .hs{display:none}}
+.po-badge{padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700;text-align:center;background:color-mix(in srgb,var(--teal) 15%,transparent);color:var(--teal)}
+.po-badge.mid{background:color-mix(in srgb,var(--accent) 15%,transparent);color:var(--accent)}
+.po-badge.far{background:color-mix(in srgb,var(--pink) 15%,transparent);color:var(--pink)}
+
+/* ── CALENDAR ── */
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.cal-dn{text-align:center;font-size:10px;font-weight:700;color:var(--dim);padding:4px 0}
+.cal-day{min-height:48px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:4px;cursor:pointer;transition:border-color .15s}
+.cal-day:hover{border-color:var(--accent)}
+.cal-day .dn{font-size:10px;font-weight:700;color:var(--muted)}
+.cal-day.today{background:color-mix(in srgb,var(--accent) 8%,transparent)}
+.cal-day.has-e{border-color:color-mix(in srgb,var(--accent) 35%,transparent)}
+.cal-day.has-e .dn{color:var(--accent)}
+.cal-day .da{font-size:9px;color:var(--pink);margin-top:2px}
+.cal-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.cal-nav{background:none;border:1px solid var(--border);color:var(--muted);border-radius:5px;padding:3px 10px;cursor:pointer;font-size:12px;font-family:var(--font-b);transition:all .15s}
+.cal-nav:hover{border-color:var(--accent);color:var(--accent)}
+.cal-month-lbl{font-family:var(--font-h);font-size:1.1rem;color:var(--text)}
+
+/* ── CHALLENGE ── */
+.ch-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:10px}
+.ch-day{aspect-ratio:1;border-radius:5px;border:1.5px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--dim);transition:all .15s;user-select:none}
+.ch-day:hover{border-color:var(--accent)}
+.ch-day.ok{background:color-mix(in srgb,var(--teal) 20%,transparent);border-color:var(--teal);color:var(--teal)}
+.ch-day.no{background:color-mix(in srgb,var(--pink) 15%,transparent);border-color:var(--pink);color:var(--pink)}
+
+/* ── ROLLOVER BOX ── */
+.rollover-box{background:color-mix(in srgb,var(--accent) 8%,transparent);border:1px solid color-mix(in srgb,var(--accent) 20%,transparent);border-radius:var(--r);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:14px}
+.ro-label{font-size:11px;color:var(--muted)}
+.ro-val{font-family:var(--font-h);font-size:1.3rem;color:var(--accent)}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:18px;right:18px;background:var(--teal);color:#000;padding:9px 16px;border-radius:99px;font-size:12px;font-weight:700;z-index:999;opacity:0;transform:translateY(8px);transition:all .3s;pointer-events:none}
+.toast.show{opacity:1;transform:translateY(0)}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.card,.tile,.rollover-box{animation:fadeUp .4s ease both}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--dim);border-radius:99px}
+
+/* ── PRINT ── */
+@media print{
+  .topbar{display:none!important}
+  body{background:#fff!important;color:#000!important}
+  .page{display:none!important}
+  .page.active{display:block!important;padding:8px!important;max-width:100%!important}
+  .card,.tile{box-shadow:none!important;border:1px solid #ccc!important;page-break-inside:avoid}
+  .card-title{color:#000!important}
+  .tile-label{color:#444!important}
+  .add-btn,.del,.ibtn,.cal-nav,.thm,.nav-tabs{display:none!important}
+  input,select,textarea{border:none!important;background:transparent!important;color:#000!important}
+  .tile-val{color:#000!important}
+  .muted,.sec-label{color:#666!important}
+}
+</style>
+</head>
+<body>
+
+<!-- ══ TOPBAR ══ -->
+<div class="topbar">
+  <div class="brand" style="display:flex;align-items:center;gap:7px">
+    <svg width="34" height="34" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="17" cy="17" r="16" fill="#f5f0e8" stroke="#9aaa8a" stroke-width="1.8"/>
+      <text x="6" y="26" font-family="Georgia,serif" font-size="20" font-weight="700" fill="#8fa882" opacity="0.9">t</text>
+      <text x="14" y="26" font-family="Georgia,serif" font-size="17" font-weight="700" fill="#7a9ab5">w</text>
+      <polygon points="17,5 18.2,9.5 23,10.5 18.2,11.5 17,16 15.8,11.5 11,10.5 15.8,9.5" fill="#e8a830"/>
+    </svg>
+    <span style="font-family:var(--font-h);font-size:.95rem;letter-spacing:.01em"><span style="color:#8fa882">tiny</span><span style="color:#7a9ab5">wins</span><span style="color:#8fa882">print</span></span>
+  </div>
+  <div class="nav-tabs">
+    <button class="nt active" onclick="goPage('dash')">Dashboard</button>
+    <button class="nt" onclick="goPage('txn')">Transactions</button>
+    <button class="nt" onclick="goPage('bills')">Bills & Savings</button>
+    <button class="nt" onclick="goPage('debt')">Debt Snowball</button>
+    <button class="nt" onclick="goPage('goals')">Goals</button>
+    <button class="nt" onclick="goPage('cal')">Calendar</button>
+  </div>
+  <div class="tbr">
+    <button class="thm active" data-t="">◆ Midnight</button>
+    <button class="thm" data-t="sage">🌿 Sage</button>
+    <button class="thm" data-t="copper">🔶 Copper</button>
+    <button class="thm" data-t="glacier">❄ Glacier</button>
+    <button class="ibtn ibtn-g" onclick="window.print()">🖨 Page</button>
+    <button class="ibtn ibtn-g" onclick="printAll()">🖨 All</button>
+    <button class="ibtn ibtn-p" onclick="dlPDF()">⬇ PDF</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     PAGE: DASHBOARD
+══════════════════════════════════════ -->
+<div class="page active" id="page-dash">
+
+  <!-- Month Hero -->
+  <div class="month-hero">
+    <div class="month-name" id="month-display">JANUARY</div>
+    <div class="month-meta">
+      <div class="month-range" id="month-range">01 Jan 2025 — 31 Jan 2025</div>
+      <div style="font-size:11px;color:var(--muted)">Budget Period</div>
+    </div>
+    <div class="currency-row">
+      <label class="lbl">Name</label>
+      <input type="text" id="meta-name" placeholder="Your Name" style="width:120px" oninput="refreshAll()">
+      <label class="lbl" style="margin-left:8px">Month</label>
+      <input type="month" id="meta-month" style="width:130px" oninput="refreshAll()">
+      <label class="lbl" style="margin-left:8px">Currency</label>
+      <select id="meta-cur" style="width:70px" onchange="refreshAll()">
+        <option>$</option><option>£</option><option>€</option><option>C$</option><option>A$</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Rollover from previous -->
+  <div class="rollover-box">
+    <div><div class="ro-label">Rollover from Previous Month</div><div style="font-size:11px;color:var(--muted)">Add leftover budget from last month</div></div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <label class="lbl" style="margin:0">Amount</label>
+      <input type="number" id="rollover" value="0" min="0" style="width:100px" oninput="refreshAll()">
+    </div>
+    <div><div class="ro-label">Adjusted Income</div><div class="ro-val" id="adj-income">$0.00</div></div>
+  </div>
+
+  <!-- 4 top tiles -->
+  <div class="g4">
+    <div class="tile"><div class="tile-label">Income</div><div class="tile-val g" id="d-income">$0</div><div class="tile-sub" id="d-inc-sub">+ rollover</div></div>
+    <div class="tile"><div class="tile-label">Expenses & Bills</div><div class="tile-val r" id="d-exp">$0</div><div class="tile-sub" id="d-exp-sub">budgeted</div></div>
+    <div class="tile"><div class="tile-label">Debt Payments</div><div class="tile-val b" id="d-debt">$0</div><div class="tile-sub">min payments</div></div>
+    <div class="tile"><div class="tile-label">Savings</div><div class="tile-val a" id="d-sav">$0</div><div class="tile-sub">this month</div></div>
+  </div>
+
+  <div class="g2">
+    <!-- Cash Flow Summary -->
+    <div class="card">
+      <div class="card-title"><div class="ct-bar"></div>Cash Flow Summary</div>
+      <div class="bar-chart" id="cashflow-chart"></div>
+      <div style="margin-top:16px">
+        <div class="sec-label">Cash Flow Totals</div>
+        <table class="tbl" id="cf-table">
+          <thead><tr><th>Category</th><th style="text-align:right">Expected</th><th style="text-align:right">Actual</th></tr></thead>
+          <tbody id="cf-body"></tbody>
+        </table>
+        <div class="tbl-total" style="color:var(--accent)"><span>TOTAL LEFTOVER</span><span id="cf-leftover">$0.00</span></div>
+      </div>
+    </div>
+
+    <!-- Income Breakdown Donut -->
+    <div class="card">
+      <div class="card-title"><div class="ct-bar" style="background:var(--teal)"></div>Income Breakdown</div>
+      <div class="donut-wrap" style="justify-content:center;margin-bottom:16px">
+        <div class="donut-container">
+          <svg width="120" height="120" viewBox="0 0 120 120" class="donut-svg">
+            <circle cx="60" cy="60" r="46" fill="none" stroke="var(--dim)" stroke-width="14"/>
+            <circle cx="60" cy="60" r="46" fill="none" stroke="var(--teal)" stroke-width="14" stroke-dasharray="0 289" id="d-ring-inc" stroke-linecap="round" style="transition:stroke-dasharray .7s"/>
+            <circle cx="60" cy="60" r="46" fill="none" stroke="var(--accent)" stroke-width="14" stroke-dasharray="0 289" id="d-ring-exp" stroke-linecap="round" stroke-dashoffset="-10" style="transition:all .7s"/>
+          </svg>
+          <div class="donut-center" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
+            <div class="donut-pct" id="d-pct">0%</div>
+            <div class="donut-lbl">saved</div>
+          </div>
+        </div>
+      </div>
+      <div class="legend" style="margin:0 auto;width:fit-content">
+        <div class="legend-item"><div class="legend-dot" style="background:var(--teal)"></div><span>Income — <strong id="leg-inc">$0</strong></span></div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--pink)"></div><span>Expenses — <strong id="leg-exp">$0</strong></span></div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--blue)"></div><span>Debt — <strong id="leg-debt">$0</strong></span></div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div><span>Savings — <strong id="leg-sav">$0</strong></span></div>
+      </div>
+
+      <!-- Actual Allocation Donut -->
+      <div class="card-title" style="margin-top:18px"><div class="ct-bar" style="background:var(--pink)"></div>Actual Allocation</div>
+      <div class="donut-wrap" style="justify-content:center">
+        <div class="donut-container">
+          <svg width="120" height="120" viewBox="0 0 120 120" class="donut-svg">
+            <circle cx="60" cy="60" r="46" fill="none" stroke="var(--dim)" stroke-width="14"/>
+            <circle cx="60" cy="60" r="46" fill="none" stroke="var(--pink)" stroke-width="14" stroke-dasharray="0 289" id="alloc-ring-exp" stroke-linecap="round" style="transition:all .7s"/>
+            <circle cx="60" cy="60" r="46" fill="none" stroke="var(--blue)" stroke-width="14" stroke-dasharray="0 289" id="alloc-ring-dbt" stroke-linecap="round" style="transition:all .7s"/>
+            <circle cx="60" cy="60" r="46" fill="none" stroke="var(--accent)" stroke-width="14" stroke-dasharray="0 289" id="alloc-ring-sav" stroke-linecap="round" style="transition:all .7s"/>
+          </svg>
+          <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
+            <div class="donut-pct" id="alloc-pct" style="font-size:1rem">—</div>
+            <div class="donut-lbl">balance</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Expense Summary + Bill Tracker side by side -->
+  <div class="g2">
+    <div class="card">
+      <div class="card-title"><div class="ct-bar" style="background:var(--pink)"></div>Expense Summary</div>
+      <table class="tbl">
+        <thead><tr><th>Category</th><th style="text-align:right">Expected</th><th style="text-align:right">Actual</th><th style="text-align:right">Progress</th></tr></thead>
+        <tbody id="exp-summary-body"></tbody>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-title"><div class="ct-bar" style="background:var(--blue)"></div>Bill Tracker</div>
+      <table class="tbl">
+        <thead><tr><th></th><th>Bill</th><th style="text-align:right">Due</th><th style="text-align:right">Amount</th><th style="text-align:right">Progress</th></tr></thead>
+        <tbody id="bill-summary-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card"><div class="card-title"><div class="ct-bar" style="background:var(--muted)"></div>Notes & Reminders</div><textarea id="dash-notes" placeholder="Monthly goals, payment reminders, financial intentions…"></textarea></div>
+</div>
+
+<!-- ══════════════════════════════════════
+     PAGE: TRANSACTIONS
+══════════════════════════════════════ -->
+<div class="page" id="page-txn">
+  <div class="sec-label" style="margin-top:4px">Transactions List — All Types in One Place</div>
+  <div class="card" style="margin-bottom:10px">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
+      <div class="pill p-r">Expense</div><div class="pill p-g">Income</div><div class="pill p-b">Savings</div><div class="pill p-p">Debt</div>
+      <span style="font-size:11px;color:var(--muted);margin-left:6px">— color-coded by type</span>
+      <button class="ibtn ibtn-g" style="margin-left:auto;font-size:11px" onclick="importCSV()">⬆ Import CSV</button>
+      <input type="file" id="csv-input" accept=".csv" style="display:none" onchange="handleCSV(event)">
+    </div>
+    <table class="tbl" id="txn-table">
+      <thead><tr><th>Date</th><th>Type</th><th>Category</th><th>Amount</th><th>Description</th><th></th></tr></thead>
+      <tbody id="txn-body"></tbody>
+    </table>
+    <button class="add-btn" onclick="addTxn()">+ Add Transaction</button>
+    <div class="tbl-total"><span>Total Expenses This Month</span><span id="txn-total">$0.00</span></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     PAGE: BILLS & SAVINGS
+══════════════════════════════════════ -->
+<div class="page" id="page-bills">
+  <div class="g2">
+    <!-- Debt Payment Tracker -->
+    <div class="card">
+      <div class="card-title"><div class="ct-bar" style="background:var(--purple)"></div>Debt Payment Tracker</div>
+      <table class="tbl">
+        <thead><tr><th></th><th>Category</th><th style="text-align:right">Due</th><th style="text-align:right">Expected</th><th style="text-align:right">Actual</th><th style="text-align:right">%</th><th></th></tr></thead>
+        <tbody id="debt-pay-body"></tbody>
+      </table>
+      <button class="add-btn" onclick="addRow('debt-pay')">+ Add Debt Payment</button>
+      <div class="tbl-total"><span>Total</span><span id="debt-pay-total">$0.00</span></div>
+    </div>
+    <!-- Savings & Investment Tracker -->
+    <div class="card">
+      <div class="card-title"><div class="ct-bar" style="background:var(--teal)"></div>Savings & Investment Tracker</div>
+      <table class="tbl">
+        <thead><tr><th>Category</th><th style="text-align:right">Expected</th><th style="text-align:right">Actual</th><th style="text-align:right">%</th><th></th></tr></thead>
+        <tbody id="sav-inv-body"></tbody>
+      </table>
+      <button class="add-btn" onclick="addRow('sav-inv')">+ Add Savings Goal</button>
+      <div class="tbl-total"><span>Total</span><span id="sav-inv-total">$0.00</span></div>
+    </div>
+  </div>
+  <div class="g2">
+    <!-- Bill Tracker -->
+    <div class="card">
+      <div class="card-title"><div class="ct-bar" style="background:var(--blue)"></div>Bill Tracker</div>
+      <table class="tbl">
+        <thead><tr><th></th><th>Category</th><th style="text-align:right">Due</th><th style="text-align:right">Expected</th><th style="text-align:right">Actual</th><th style="text-align:right">%</th><th></th></tr></thead>
+        <tbody id="bills-body"></tbody>
+      </table>
+      <button class="add-btn" onclick="addRow('bills')">+ Add Bill</button>
+      <div class="tbl-total"><span>Total Bills</span><span id="bills-total">$0.00</span></div>
+    </div>
+    <!-- Expense Summary -->
+    <div class="card">
+      <div class="card-title"><div class="ct-bar" style="background:var(--pink)"></div>Expense Summary</div>
+      <table class="tbl">
+        <thead><tr><th>Category</th><th style="text-align:right">Expected</th><th style="text-align:right">Actual</th><th style="text-align:right">%</th><th></th></tr></thead>
+        <tbody id="expenses-body"></tbody>
+      </table>
+      <button class="add-btn" onclick="addRow('expenses')">+ Add Expense</button>
+      <div class="tbl-total"><span>Total Expenses</span><span id="expenses-total">$0.00</span></div>
+    </div>
+  </div>
+
+  <!-- 50/30/20 -->
+  <div class="card">
+    <div class="card-title"><div class="ct-bar" style="background:var(--accent)"></div>50/30/20 Rule & Annual Projection</div>
+    <div class="g3" style="margin-bottom:14px">
+      <div class="tile"><div class="tile-label">Annual Income</div><div class="tile-val g" id="ann-inc">$0</div></div>
+      <div class="tile"><div class="tile-label">Annual Expenses</div><div class="tile-val r" id="ann-exp">$0</div></div>
+      <div class="tile"><div class="tile-label">Annual Savings</div><div class="tile-val a" id="ann-sav">$0</div></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px" id="rule-bars"></div>
+  </div>
+
+  <!-- Sinking Funds -->
+  <div class="card">
+    <div class="card-title"><div class="ct-bar" style="background:var(--accent)"></div>Sinking Funds</div>
+    <table class="tbl">
+      <thead><tr><th>Goal</th><th style="text-align:right">Target</th><th style="text-align:right">Saved</th><th style="text-align:right">Monthly</th><th style="text-align:right">Progress</th><th></th></tr></thead>
+      <tbody id="sinking-body"></tbody>
+    </table>
+    <button class="add-btn" onclick="addRow('sinking')">+ Add Sinking Fund</button>
+  </div>
+
+  <!-- No-Spend Challenge -->
+  <div class="card">
+    <div class="card-title"><div class="ct-bar" style="background:var(--purple)"></div>No-Spend Challenge <span class="pill p-p" style="margin-left:8px">30 Days</span></div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
+      <span class="pill p-g">✓ No Spend</span><span class="pill p-r">✗ Spent</span>
+      <span style="font-size:11px;color:var(--muted)">Streak: <strong id="streak">0 days</strong> · Saved ≈ <strong id="streak-saved">$0</strong></span>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:6px"><label class="lbl" style="margin:0;white-space:nowrap">Avg daily $</label><input type="number" id="daily-spend" value="30" min="0" style="width:70px" oninput="renderChallenge()"></div>
+    </div>
+    <div class="ch-grid" id="ch-grid"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     PAGE: DEBT SNOWBALL
+══════════════════════════════════════ -->
+<div class="page" id="page-debt">
+  <div class="card">
+    <div class="card-title"><div class="ct-bar"></div>Snowball Settings</div>
+    <div class="g3">
+      <div><label class="lbl">Extra Monthly Payment</label><input type="number" id="sb-extra" value="0" min="0" step="10" oninput="calcSB()"></div>
+      <div class="tile"><div class="tile-label">Total Debt</div><div class="tile-val r" id="sb-total">$0</div></div>
+      <div class="tile"><div class="tile-label">Debt-Free Date</div><div class="tile-val a" id="sb-date">—</div></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title"><div class="ct-bar" style="background:var(--pink)"></div>Your Debts — Smallest Balance First</div>
+    <div class="sb-grid sb-head"><span>Debt Name</span><span>Balance</span><span>APR %</span><span>Min Pay</span><span class="hs">Payoff</span><span></span></div>
+    <div id="sb-rows"></div>
+    <button class="add-btn" onclick="addSBRow()">+ Add Debt</button>
+  </div>
+  <div class="card" id="sb-sched" style="display:none">
+    <div class="card-title"><div class="ct-bar" style="background:var(--teal)"></div>🏁 Payoff Schedule</div>
+    <div id="sb-sched-content"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     PAGE: GOALS
+══════════════════════════════════════ -->
+<div class="page" id="page-goals">
+  <div class="sec-label" style="margin-top:4px">Goal Tracker — Weekly, Monthly & Yearly</div>
+
+  <!-- Areas of life summary -->
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-title"><div class="ct-bar"></div>Areas of Life Overview</div>
+    <table class="tbl" id="areas-tbl">
+      <thead><tr><th>Category</th><th style="text-align:right">Goals Set</th><th style="text-align:right">Achieved</th><th style="text-align:right">Progress</th></tr></thead>
+      <tbody id="areas-body"></tbody>
+    </table>
+  </div>
+
+  <!-- Top Priorities -->
+  <div class="g2">
+    <div class="card">
+      <div class="card-title"><div class="ct-bar" style="background:var(--accent)"></div>Top Priorities</div>
+      <div id="priority-rows" style="display:flex;flex-direction:column;gap:6px"></div>
+      <button class="add-btn" onclick="addPriority()">+ Add Priority</button>
+    </div>
+    <div class="card">
+      <div class="card-title"><div class="ct-bar" style="background:var(--teal)"></div>Goals Achieved</div>
+      <div style="text-align:center;padding:16px">
+        <div class="donut-container" style="margin:0 auto 12px">
+          <svg width="120" height="120" viewBox="0 0 120 120" class="donut-svg">
+            <circle cx="60" cy="60" r="46" fill="none" stroke="var(--dim)" stroke-width="14"/>
+            <circle cx="60" cy="60" r="46" fill="none" stroke="var(--teal)" stroke-width="14" stroke-dasharray="0 289" id="goal-ring" style="transition:all .7s"/>
+          </svg>
+          <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
+            <div class="donut-pct" id="goal-pct">0%</div>
+            <div class="donut-lbl">achieved</div>
+          </div>
+        </div>
+        <div style="font-size:13px;color:var(--muted)"><strong id="goal-count" style="color:var(--teal)">0</strong> / <strong id="goal-total">0</strong> goals</div>
+        <div style="font-size:11px;color:var(--dim);margin-top:4px" id="goal-msg">Keep up the great work!</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Individual Goals -->
+  <div class="sec-label">Individual Goals</div>
+  <div class="g2" id="goals-grid"></div>
+  <button class="add-btn" style="margin-bottom:14px" onclick="addGoal()">+ Add New Goal</button>
+</div>
+
+<!-- ══════════════════════════════════════
+     PAGE: CALENDAR
+══════════════════════════════════════ -->
+<div class="page" id="page-cal">
+  <div class="card">
+    <div class="cal-hdr">
+      <button class="cal-nav" onclick="chMon(-1)">← Prev</button>
+      <div class="cal-month-lbl" id="cal-lbl"></div>
+      <button class="cal-nav" onclick="chMon(1)">Next →</button>
+    </div>
+    <div class="cal-grid" id="cal-grid"></div>
+  </div>
+  <div class="card" id="cal-entry-card" style="display:none">
+    <div class="card-title" id="cal-entry-title">Log Entry</div>
+    <div class="g2"><div><label class="lbl">Description</label><input type="text" id="cal-desc" placeholder="Grocery run, rent…"></div><div><label class="lbl">Amount</label><input type="number" id="cal-amt" placeholder="0.00" min="0"></div></div>
+    <button class="ibtn ibtn-p" style="margin-top:10px" onclick="saveCalEntry()">Save</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══ STATE ══
+const ST={calMon:new Date().getMonth(),calYr:new Date().getFullYear(),calE:{},chDays:{},selDay:null};
+const AREAS=['Finance','Career','Personal Growth','Health & Wellness','Relationships','Fun & Hobbies'];
+let goalsData=[];let priorityData=[];
+
+function cur(){return document.getElementById('meta-cur').value||'$';}
+function fmt(n){return cur()+Math.abs(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function fmtS(n){return cur()+Math.abs(n).toLocaleString('en-US',{maximumFractionDigits:0});}
+function el(id){return document.getElementById(id);}
+function set(id,v){const e=el(id);if(e)e.textContent=v;}
+function setH(id,v){const e=el(id);if(e)e.innerHTML=v;}
+
+// ══ INIT ══
+el('meta-month').value=new Date().toISOString().slice(0,7);
+
+// Default transactions
+[{d:'2025-01-02',t:'Expense',c:'Food',a:'18.50',desc:'Groceries'},
+ {d:'2025-01-03',t:'Expense',c:'Transport',a:'40.00',desc:'Gas'},
+ {d:'2025-01-05',t:'Income',c:'Salary',a:'4350.00',desc:'Paycheck'},
+ {d:'2025-01-08',t:'Savings',c:'Emergency Fund',a:'200.00',desc:'Auto-transfer'},
+ {d:'2025-01-10',t:'Debt',c:'Student Loans',a:'150.00',desc:'Min payment'},
+ {d:'2025-01-12',t:'Expense',c:'Beauty',a:'32.75',desc:'Salon'}
+].forEach(r=>addTxnRow(r.d,r.t,r.c,r.a,r.desc));
+
+// Default bills page
+[{c:'Student Loans',due:'5',exp:'150',act:'150'},{c:'Mortgage',due:'1',exp:'900',act:'900'},{c:'Car Payments',due:'15',exp:'300',act:'300'}]
+  .forEach(r=>addPageRow('debt-pay',r.c,r.due,r.exp,r.act));
+[{c:'Travel Fund',exp:'320',act:'120'},{c:'Wedding Fund',exp:'400',act:'200'},{c:'Car Fund',exp:'300',act:'723'}]
+  .forEach(r=>addPageRow('sav-inv',r.c,'',r.exp,r.act));
+[{c:'Internet',due:'5',exp:'40',act:'40'},{c:'Electricity',due:'16',exp:'200',act:'95'},{c:'Water',due:'15',exp:'100',act:'15'},{c:'Mobile',due:'10',exp:'30',act:'75'},{c:'Life Insurance',due:'3',exp:'200',act:'200'},{c:'Health Insurance',due:'1',exp:'300',act:'300'}]
+  .forEach(r=>addPageRow('bills',r.c,r.due,r.exp,r.act));
+[{c:'Food',exp:'200',act:'88.75'},{c:'Social Life',exp:'100',act:'0'},{c:'Transportation',exp:'100',act:'60'},{c:'Household',exp:'300',act:'225'},{c:'Apparel',exp:'100',act:'125'},{c:'Beauty',exp:'50',act:'32.75'},{c:'Health',exp:'80',act:'0'}]
+  .forEach(r=>addPageRow('expenses',r.c,'',r.exp,r.act));
+[{l:'Vacation',t:'2000',s:'500',m:'200'},{l:'Emergency Fund',t:'5000',s:'1200',m:'300'}]
+  .forEach(r=>addSinkRow(r.l,r.t,r.s,r.m));
+
+// Default debts
+[{n:'Credit Card',b:'2400',i:'19.99',p:'65'},{n:'Car Loan',b:'8500',i:'5.9',p:'245'},{n:'Student Loan',b:'18000',i:'4.5',p:'200'}]
+  .forEach(r=>addSBRow(r.n,r.b,r.i,r.p));
+
+// Default goals
+AREAS.forEach(a=>addGoal(a));
+['Pay off credit card','Exercise 4x/week','Read 2 books','Save for vacation','Learn new skill','Call family weekly']
+  .forEach(p=>addPriority(p));
+
+renderChallenge();renderCal();refreshAll();
+
+// ══ ADD TRANSACTION ROW ══
+function addTxn(){addTxnRow('','Expense','','','');}
+function addTxnRow(dv='',tv='Expense',cv='',av='',dsc=''){
+  const tbody=el('txn-body');const tr=document.createElement('tr');
+  const types=['Expense','Income','Savings','Debt'];
+  const cats=['Food','Transport','Housing','Utilities','Entertainment','Beauty','Health','Education','Clothing','Salary','Freelance','Bonus','Emergency Fund','Investments','Student Loans','Credit Card','Car Loan','Mortgage'];
+  tr.innerHTML=`
+    <td><input type="date" value="${dv}" oninput="refreshAll()" style="width:110px"></td>
+    <td><select onchange="refreshAll()">
+      ${types.map(t=>`<option${t===tv?' selected':''}>${t}</option>`).join('')}</select></td>
+    <td><input type="text" value="${cv}" placeholder="Category" list="cat-list" oninput="refreshAll()"></td>
+    <td><input type="number" value="${av}" placeholder="0.00" min="0" step=".01" oninput="refreshAll()" style="width:85px"></td>
+    <td><input type="text" value="${dsc}" placeholder="Note" oninput="refreshAll()"></td>
+    <td><button class="del" onclick="this.closest('tr').remove();refreshAll()">✕</button></td>`;
+  tbody.appendChild(tr);
+  // color row
+  const sel=tr.querySelector('select');
+
+  refreshAll();
+}
+
+
+// ══ ADD BILLS PAGE ROWS ══
+function addRow(sec){
+  if(sec==='sinking'){addSinkRow();return;}
+  addPageRow(sec);
+}
+function addPageRow(sec,cv='',dv='',ev='',av=''){
+  const tbody=el(sec+'-body');if(!tbody)return;
+  const tr=document.createElement('tr');
+  const hasChk=sec==='debt-pay'||sec==='bills';
+  const hasDue=sec==='debt-pay'||sec==='bills';
+  let inner='';
+  if(hasChk) inner+=`<td><input type="checkbox" class="chk" onchange="refreshAll()"></td>`;
+  inner+=`<td><input type="text" value="${cv}" placeholder="Name" oninput="refreshAll()"></td>`;
+  if(hasDue) inner+=`<td><input type="text" value="${dv}" placeholder="Day" style="width:50px" oninput="refreshAll()"></td>`;
+  inner+=`<td><input type="number" value="${ev}" placeholder="0.00" min="0" step=".01" oninput="refreshAll()" style="text-align:right;width:80px"></td>`;
+  inner+=`<td><input type="number" value="${av}" placeholder="0.00" min="0" step=".01" oninput="refreshAll()" style="text-align:right;width:80px"></td>`;
+  inner+=`<td style="text-align:right;font-size:11px;color:var(--muted)" class="pct-cell">—</td>`;
+  inner+=`<td><button class="del" onclick="this.closest('tr').remove();refreshAll()">✕</button></td>`;
+  tr.innerHTML=inner;tbody.appendChild(tr);refreshAll();
+}
+function addSinkRow(l='',t='',s='',m=''){
+  const tbody=el('sinking-body');if(!tbody)return;
+  const tr=document.createElement('tr');
+  tr.innerHTML=`<td><input type="text" value="${l}" placeholder="Goal" oninput="refreshAll()"></td>
+    <td><input type="number" value="${t}" placeholder="0" min="0" oninput="refreshAll()" style="text-align:right;width:80px"></td>
+    <td><input type="number" value="${s}" placeholder="0" min="0" oninput="refreshAll()" style="text-align:right;width:80px"></td>
+    <td><input type="number" value="${m}" placeholder="0" min="0" oninput="refreshAll()" style="text-align:right;width:80px"></td>
+    <td style="text-align:right"><div class="prog-wrap" style="margin:0;min-width:80px"><div class="prog-track"><div class="prog-fill" style="width:0%;background:var(--accent)"></div></div></div></td>
+    <td><button class="del" onclick="this.closest('tr').remove()">✕</button></td>`;
+  tbody.appendChild(tr);
+}
+
+// ══ SECTION SUMS ══
+function sumCol(bodyId,colIdx){return[...document.querySelectorAll(`#${bodyId} tr`)].reduce((s,r)=>{const ins=r.querySelectorAll('input[type=number]');return s+(ins[colIdx]?parseFloat(ins[colIdx].value)||0:0);},0);}
+function updatePcts(bodyId){[...document.querySelectorAll(`#${bodyId} tr`)].forEach(r=>{const ins=r.querySelectorAll('input[type=number]');if(ins.length<2)return;const exp=parseFloat(ins[ins.length-2]?.value)||0,act=parseFloat(ins[ins.length-1]?.value)||0;const pct=exp>0?Math.round(act/exp*100):0;const pc=r.querySelector('.pct-cell');if(pc)pc.textContent=pct+'%';});}
+
+// ══ TXN SUMS ══
+function txnSum(type){return[...document.querySelectorAll('#txn-body tr')].reduce((s,r)=>{const sel=r.querySelector('select');const inp=r.querySelectorAll('input[type=number]')[0];if(sel?.value===type)s+=parseFloat(inp?.value)||0;return s;},0);}
+
+// ══ REFRESH ALL ══
+function refreshAll(){
+  // Month display
+  const mv=el('meta-month').value;
+  if(mv){const [yr,mo]=mv.split('-').map(Number);const d=new Date(yr,mo-1,1);const lastDay=new Date(yr,mo,0).getDate();const monthShort=d.toLocaleDateString('en-US',{month:'short'});el('month-display').textContent=d.toLocaleDateString('en-US',{month:'long'}).toUpperCase();el('month-range').textContent=`01 ${monthShort} ${yr} — ${lastDay} ${monthShort} ${yr}`;}
+
+  const rollover=parseFloat(el('rollover').value)||0;
+  const incTxn=txnSum('Income');
+  const expTxn=txnSum('Expense');
+  const savTxn=txnSum('Savings');
+  const dbtTxn=txnSum('Debt');
+
+  const expBud=sumCol('expenses-body',0);
+  const savBud=sumCol('sav-inv-body',0);
+  const dbtBud=sumCol('debt-pay-body',0);
+  const billBud=sumCol('bills-body',0);
+
+  const totalInc=incTxn+rollover;
+  const totalExp=expTxn+dbtTxn;
+  const leftover=totalInc-totalExp-savTxn;
+
+  // Dashboard tiles
+  set('d-income',fmtS(totalInc));set('d-exp',fmtS(expTxn));set('d-debt',fmtS(dbtBud));set('d-sav',fmtS(savTxn));
+  set('adj-income',fmt(totalInc));
+  set('txn-total',fmt(expTxn));
+
+  // Donut: income allocation
+  const circ=289;
+  const incFrac=totalInc>0?Math.min(incTxn/totalInc,1):0;
+  const remFrac=totalInc>0?Math.min(leftover/totalInc,1):0;
+  el('d-ring-inc').setAttribute('stroke-dasharray',`${Math.round(incFrac*circ)} ${circ}`);
+  el('d-ring-exp').setAttribute('stroke-dasharray',`${Math.round(remFrac*circ)} ${circ}`);
+  el('d-ring-exp').setAttribute('stroke-dashoffset',`${-Math.round(incFrac*circ)-5}`);
+  const savPct=totalInc>0?Math.round(savTxn/totalInc*100):0;
+  set('d-pct',savPct+'%');
+  set('leg-inc',fmtS(totalInc));set('leg-exp',fmtS(expTxn));set('leg-debt',fmtS(dbtTxn));set('leg-sav',fmtS(savTxn));
+
+  // Actual allocation donut
+  const total2=expTxn+dbtTxn+savTxn||1;
+  const ef=Math.round(expTxn/total2*circ),df=Math.round(dbtTxn/total2*circ),sf=Math.round(savTxn/total2*circ);
+  el('alloc-ring-exp').setAttribute('stroke-dasharray',`${ef} ${circ}`);
+  el('alloc-ring-dbt').setAttribute('stroke-dasharray',`${df} ${circ}`);
+  el('alloc-ring-dbt').setAttribute('stroke-dashoffset',`-${ef+2}`);
+  el('alloc-ring-sav').setAttribute('stroke-dasharray',`${sf} ${circ}`);
+  el('alloc-ring-sav').setAttribute('stroke-dashoffset',`-${ef+df+4}`);
+  set('alloc-pct',fmt(leftover).replace(cur(),'').trim().split('.')[0]);
+
+  // Cash flow bars
+  const cfRows=[{l:'Total Income',exp:incTxn,act:totalInc,c:'var(--teal)'},{l:'Expenses',exp:expBud,act:expTxn,c:'var(--pink)'},{l:'Bills',exp:billBud,act:dbtTxn,c:'var(--blue)'},{l:'Debt',exp:dbtBud,act:dbtTxn,c:'var(--purple)'},{l:'Savings',exp:savBud,act:savTxn,c:'var(--accent)'}];
+  const maxV=Math.max(...cfRows.map(r=>Math.max(r.exp,r.act)),1);
+  el('cashflow-chart').innerHTML=cfRows.map(r=>`
+    <div class="bc-row"><div class="bc-label">${r.l}</div>
+    <div style="flex:1;display:flex;flex-direction:column;gap:2px">
+      <div class="bc-track"><div class="bc-fill" style="width:${Math.round(r.exp/maxV*100)}%;background:${r.c};opacity:.35"></div></div>
+      <div class="bc-track"><div class="bc-fill" style="width:${Math.round(r.act/maxV*100)}%;background:${r.c}"></div></div>
+    </div><div class="bc-val">${fmtS(r.act)}</div></div>`).join('');
+
+  // CF table
+  el('cf-body').innerHTML=cfRows.map(r=>`<tr><td>${r.l}</td><td style="text-align:right">${fmt(r.exp)}</td><td style="text-align:right">${fmt(r.act)}</td></tr>`).join('');
+  set('cf-leftover',fmt(leftover));
+
+  // Expense summary dashboard
+  const expRows=[...document.querySelectorAll('#expenses-body tr')];
+  el('exp-summary-body').innerHTML=expRows.map(r=>{const ins=r.querySelectorAll('input[type=number]');const exp=parseFloat(ins[0]?.value)||0,act=parseFloat(ins[1]?.value)||0;const lbl=r.querySelector('input[type=text]')?.value||'—';const pct=exp>0?Math.min(Math.round(act/exp*100),200):0;return`<tr><td>${lbl}</td><td style="text-align:right">${fmt(exp)}</td><td style="text-align:right">${fmt(act)}</td><td><div class="prog-track" style="min-width:60px"><div class="prog-fill" style="width:${Math.min(pct,100)}%;background:${pct>100?'var(--pink)':'var(--accent)'}"></div></div></td></tr>`;}).join('');
+
+  // Bill tracker dashboard
+  const billRows=[...document.querySelectorAll('#bills-body tr')];
+  el('bill-summary-body').innerHTML=billRows.map(r=>{const ins=r.querySelectorAll('input[type=number]');const chk=r.querySelector('input[type=checkbox]');const exp=parseFloat(ins[0]?.value)||0,act=parseFloat(ins[1]?.value)||0;const lbl=r.querySelector('input[type=text]')?.value||'—';const due=r.querySelectorAll('input[type=text]')[1]?.value||'';const pct=exp>0?Math.min(Math.round(act/exp*100),200):0;return`<tr><td><input type="checkbox" class="chk" ${chk?.checked?'checked':''}></td><td>${lbl}</td><td style="text-align:right">${due}</td><td style="text-align:right">${fmt(exp)}</td><td style="text-align:right">${fmt(act)}</td><td><div class="prog-track" style="min-width:60px"><div class="prog-fill" style="width:${Math.min(pct,100)}%;background:${pct>=100?'var(--teal)':'var(--blue)'}"></div></div></td></tr>`;}).join('');
+
+  // Section totals
+  ['debt-pay','sav-inv','bills','expenses'].forEach(sec=>{
+    updatePcts(sec);
+    const ins=[...document.querySelectorAll(`#${sec}-body input[type=number]`)];
+    const lastCol=[];document.querySelectorAll(`#${sec}-body tr`).forEach(r=>{const rinps=r.querySelectorAll('input[type=number]');if(rinps.length)lastCol.push(parseFloat(rinps[rinps.length-1].value)||0);});
+    const tot=lastCol.reduce((a,b)=>a+b,0);
+    set(sec+'-total',fmt(tot));
+  });
+
+  // Sinking fund progress bars
+  document.querySelectorAll('#sinking-body tr').forEach(r=>{
+    const ins=r.querySelectorAll('input[type=number]');
+    const t=parseFloat(ins[0]?.value)||0,s=parseFloat(ins[1]?.value)||0;
+    const pf=r.querySelector('.prog-fill');if(pf)pf.style.width=t>0?Math.min(Math.round(s/t*100),100)+'%':'0%';
+  });
+
+  // Annual
+  set('ann-inc',fmtS(totalInc*12));set('ann-exp',fmtS(expTxn*12));set('ann-sav',fmtS(savTxn*12));
+
+  // 50/30/20 bars
+  const ruleData=[{l:'Needs (50%)',v:expTxn,t:totalInc*.5,c:'var(--pink)'},{l:'Wants (30%)',v:dbtTxn+billBud,t:totalInc*.3,c:'var(--accent)'},{l:'Savings (20%)',v:savTxn,t:totalInc*.2,c:'var(--teal)'}];
+  el('rule-bars').innerHTML=ruleData.map(r=>{const pct=totalInc>0?Math.min(r.v/totalInc*100,100):0;const tpct=totalInc>0?r.t/totalInc*100:0;return`<div class="prog-wrap"><div class="prog-row"><span>${r.l}</span><span>${fmtS(r.v)} / target ${fmtS(r.t)}</span></div><div class="prog-track" style="position:relative"><div class="prog-fill" style="width:${pct}%;background:${r.c}"></div><div style="position:absolute;top:0;bottom:0;left:${tpct}%;width:2px;background:rgba(255,255,255,.25)"></div></div></div>`;}).join('');
+
+  // Goals
+  refreshGoals();
+}
+
+// ══ SNOWBALL ══
+function addSBRow(n='',b='',i='',p=''){
+  const wrap=el('sb-rows');if(!wrap)return;
+  const row=document.createElement('div');row.className='sb-grid';
+  const uid='sb'+Date.now()+Math.random().toString(36).slice(2,6);
+  row.innerHTML=`<input type="text" placeholder="e.g. Visa Card" value="${n}" oninput="calcSB()">
+    <input type="number" placeholder="Balance" min="0" value="${b}" oninput="calcSB()">
+    <input type="number" placeholder="APR %" min="0" value="${i}" oninput="calcSB()">
+    <input type="number" placeholder="Min $" min="0" value="${p}" oninput="calcSB()">
+    <div class="po-badge hs" id="${uid}">—</div>
+    <button class="del" onclick="this.parentElement.remove();calcSB()">✕</button>`;
+  wrap.appendChild(row);calcSB();
+}
+function calcSB(){
+  const rows=[...document.querySelectorAll('#sb-rows .sb-grid')];
+  if(!rows.length){set('sb-total','$0');set('sb-date','—');el('sb-sched').style.display='none';return;}
+  const extra=parseFloat(el('sb-extra').value)||0;
+  const debts=rows.map(r=>{const ins=r.querySelectorAll('input[type=number]');return{name:r.querySelector('input[type=text]')?.value||'Debt',balance:parseFloat(ins[0]?.value)||0,rate:parseFloat(ins[1]?.value)||0,minPay:parseFloat(ins[2]?.value)||0,badge:r.querySelector('div[id^=sb]')};}).filter(d=>d.balance>0).sort((a,b)=>a.balance-b.balance);
+  set('sb-total',fmt(debts.reduce((s,d)=>s+d.balance,0)));
+  if(!debts.length){set('sb-date','—');return;}
+  let bals=debts.map(d=>({...d,b:d.balance,mp:d.minPay}));
+  let mon=0,snow=extra;const MAX=480;
+  while(bals.some(d=>d.b>0)&&mon<MAX){mon++;bals.forEach(d=>{if(d.b<=0)return;d.b=Math.max(0,d.b+d.b*(d.rate/100/12)-d.mp);});const tgt=bals.find(d=>d.b>0);if(tgt)tgt.b=Math.max(0,tgt.b-snow);bals.forEach(d=>{if(d.b<=0&&d.mp>0){snow+=d.mp;d.mp=0;}});}
+  const pd=new Date();pd.setMonth(pd.getMonth()+mon);
+  const dstr=mon<MAX?pd.toLocaleDateString('en-US',{month:'short',year:'numeric'}):'40+ yrs';
+  set('sb-date',dstr);
+  const medals=['🥇','🥈','🥉','4️⃣','5️⃣','6️⃣'];
+  const sched=debts.map((d,i)=>{let m=0,bal=d.balance,mp=d.minPay,sw=extra;while(bal>0&&m<MAX){m++;bal=Math.max(0,bal+bal*(d.rate/100/12)-mp-sw);}const date=new Date();date.setMonth(date.getMonth()+m);const lbl=m<MAX?date.toLocaleDateString('en-US',{month:'short',year:'numeric'}):'40+ yrs';if(d.badge){d.badge.textContent=lbl;d.badge.className='po-badge hs'+(m<=12?'':m<=36?' mid':' far');}return{name:d.name,months:m,label:lbl,balance:d.balance,idx:i};});
+  el('sb-sched').style.display='';
+  el('sb-sched-content').innerHTML='<div style="display:flex;flex-direction:column;gap:7px">'+sched.map(m=>`<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface2);border-radius:6px"><span style="font-size:1.1rem">${medals[m.idx]||'•'}</span><div><div style="font-weight:600;font-size:12px">${m.name}</div><div style="font-size:10px;color:var(--muted)">${fmt(m.balance)} · ~${m.months} months</div></div><div style="margin-left:auto;font-weight:700;color:var(--teal);font-size:12px">${m.label}</div></div>`).join('')+
+  `<div style="text-align:center;padding:14px;background:color-mix(in srgb,var(--teal) 8%,transparent);border-radius:6px;margin-top:4px"><div style="font-size:10px;color:var(--muted)">🎉 Completely debt-free by</div><div style="font-family:var(--font-h);font-size:1.4rem;color:var(--teal);margin-top:4px">${dstr}</div></div></div>`;
+}
+
+// ══ GOALS ══
+function addGoal(area='Finance'){
+  const idx=goalsData.length;
+  goalsData.push({area,title:'',reward:'',status:'Not Started',steps:['','',''],deadline:'',progress:0});
+  renderGoals();
+}
+function renderGoals(){
+  const grid=el('goals-grid');if(!grid)return;
+  grid.innerHTML='';
+  goalsData.forEach((g,i)=>{
+    const div=document.createElement('div');
+    div.className='goal-card';
+    div.innerHTML=`<div class="goal-header">
+        <select style="font-size:10px;font-weight:700;background:var(--surface);border:none;color:var(--accent);width:auto" onchange="goalsData[${i}].area=this.value;refreshGoals()">${AREAS.map(a=>`<option${a===g.area?' selected':''}>${a}</option>`).join('')}</select>
+        <button class="del" style="margin-left:auto" onclick="goalsData.splice(${i},1);renderGoals()">✕</button>
+      </div>
+      <input type="text" placeholder="Goal title" value="${g.title}" style="font-weight:600;font-size:13px;background:transparent;border:none;border-bottom:1px solid var(--border);border-radius:0;padding:4px 0" oninput="goalsData[${i}].title=this.value">
+      <div style="margin-top:8px"><label class="lbl">Reward / Motivation</label><input type="text" placeholder="What's your reward?" value="${g.reward}" oninput="goalsData[${i}].reward=this.value" data-goal="${i}" data-field="reward"></div>
+      <div class="goal-steps">${g.steps.map((s,j)=>`<div class="goal-step"><input type="checkbox" class="chk" ${s.done?'checked':''} onchange="goalsData[${i}].steps[${j}].done=this.checked;refreshGoals()"><input type="text" value="${s.text||s}" placeholder="Step ${j+1}" style="flex:1;background:transparent;border:none;border-bottom:1px solid var(--border);border-radius:0;padding:3px 0;font-size:12px" oninput="goalsData[${i}].steps[${j}]={text:this.value,done:goalsData[${i}].steps[${j}].done||false}"></div>`).join('')}</div>
+      <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+        <div style="flex:1"><label class="lbl">Deadline</label><input type="date" value="${g.deadline}" oninput="goalsData[${i}].deadline=this.value" style="font-size:11px"></div>
+        <div style="flex:1"><label class="lbl">Status</label><select onchange="goalsData[${i}].status=this.value;refreshGoals()" style="font-size:11px"><option>Not Started</option><option${g.status==='In Progress'?' selected':''}>In Progress</option><option${g.status==='Achieved'?' selected':''}>Achieved</option></select></div>
+      </div>
+      <div style="margin-top:8px"><div class="prog-row"><span style="font-size:10px;color:var(--muted)">Progress</span><span style="font-size:10px;color:var(--muted)">${g.status==='Achieved'?100:g.status==='In Progress'?50:0}%</span></div><div class="prog-track"><div class="prog-fill" style="width:${g.status==='Achieved'?100:g.status==='In Progress'?50:0}%;background:var(--teal)"></div></div></div>`;
+    grid.appendChild(div);
+  });
+}
+function addPriority(txt=''){
+  priorityData.push({text:txt,done:false});renderPriorities();
+}
+function renderPriorities(){
+  const wrap=el('priority-rows');if(!wrap)return;
+  wrap.innerHTML=priorityData.map((p,i)=>`<div style="display:flex;align-items:center;gap:8px"><input type="checkbox" class="chk" ${p.done?'checked':''} onchange="priorityData[${i}].done=this.checked;renderPriorities()"><input type="text" value="${p.text}" placeholder="Priority…" style="flex:1;background:transparent;border:none;border-bottom:1px solid var(--border);border-radius:0;padding:4px 0;font-size:12px;color:${p.done?'var(--muted)':'var(--text)'};" oninput="priorityData[${i}].text=this.value"><button class="del" onclick="priorityData.splice(${i},1);renderPriorities()">✕</button></div>`).join('');
+}
+function refreshGoals(){
+  renderGoals();renderPriorities();
+  const total=goalsData.length,achieved=goalsData.filter(g=>g.status==='Achieved').length;
+  const pct=total>0?Math.round(achieved/total*100):0;
+  set('goal-count',achieved);set('goal-total',total);set('goal-pct',pct+'%');
+  set('goal-msg',pct===100?'🎉 All goals achieved!':pct>=50?'Great momentum, keep going!':'Keep up the great work!');
+  el('goal-ring').setAttribute('stroke-dasharray',`${Math.round(pct/100*289)} 289`);
+  // Areas
+  const areaMap={};AREAS.forEach(a=>{areaMap[a]={total:0,achieved:0};});
+  goalsData.forEach(g=>{if(areaMap[g.area]){areaMap[g.area].total++;if(g.status==='Achieved')areaMap[g.area].achieved++;}});
+  el('areas-body').innerHTML=AREAS.map(a=>{const d=areaMap[a];const pct=d.total>0?Math.round(d.achieved/d.total*100):0;return`<tr><td>${a}</td><td style="text-align:right">${d.total}</td><td style="text-align:right">${d.achieved}</td><td><div class="prog-track" style="min-width:80px"><div class="prog-fill" style="width:${pct}%;background:var(--teal)"></div></div></td></tr>`;}).join('');
+}
+
+// ══ NO-SPEND CHALLENGE ══
+function renderChallenge(){
+  const grid=el('ch-grid');if(!grid)return;
+  const daily=parseFloat(el('daily-spend')?.value)||30;
+  grid.innerHTML='';let streak=0,saved=0,inStr=true;
+  for(let i=1;i<=30;i++){
+    const d=document.createElement('div');
+    d.className='ch-day'+(ST.chDays[i]==='ok'?' ok':ST.chDays[i]==='no'?' no':'');
+    d.textContent=i;d.onclick=()=>{ST.chDays[i]=ST.chDays[i]==='ok'?'no':ST.chDays[i]==='no'?undefined:'ok';renderChallenge();};
+    grid.appendChild(d);
+  }
+  for(let i=30;i>=1;i--){if(ST.chDays[i]==='ok'&&inStr)streak++;else inStr=false;}
+  for(let i=1;i<=30;i++){if(ST.chDays[i]==='ok')saved+=daily;}
+  set('streak',streak+' days');set('streak-saved',fmt(saved));
+}
+
+// ══ CALENDAR ══
+function renderCal(){
+  const grid=el('cal-grid'),lbl=el('cal-lbl');if(!grid||!lbl)return;
+  const d=new Date(ST.calYr,ST.calMon,1);
+  lbl.textContent=d.toLocaleDateString('en-US',{month:'long',year:'numeric'});
+  grid.innerHTML='';
+  ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].forEach(n=>{const h=document.createElement('div');h.className='cal-dn';h.textContent=n;grid.appendChild(h);});
+  for(let i=0;i<d.getDay();i++){const e=document.createElement('div');e.style.minHeight='48px';grid.appendChild(e);}
+  const days=new Date(ST.calYr,ST.calMon+1,0).getDate(),today=new Date();
+  for(let i=1;i<=days;i++){
+    const cell=document.createElement('div');
+    const isToday=ST.calMon===today.getMonth()&&ST.calYr===today.getFullYear()&&i===today.getDate();
+    const key=`${ST.calYr}-${ST.calMon}-${i}`;
+    cell.className='cal-day'+(isToday?' today':'')+(ST.calE[key]?' has-e':'');
+    cell.innerHTML=`<div class="dn">${i}</div>${ST.calE[key]?`<div class="da">${fmt(ST.calE[key].amt)}</div>`:''}`;
+    cell.onclick=()=>openCalEntry(i,key);grid.appendChild(cell);
+  }
+}
+function chMon(d){ST.calMon+=d;if(ST.calMon>11){ST.calMon=0;ST.calYr++;}if(ST.calMon<0){ST.calMon=11;ST.calYr--;}renderCal();}
+function openCalEntry(day,key){ST.selDay=key;el('cal-entry-card').style.display='';set('cal-entry-title','Log Entry — Day '+day);el('cal-desc').value=ST.calE[key]?.desc||'';el('cal-amt').value=ST.calE[key]?.amt||'';}
+function saveCalEntry(){
+  const k=ST.selDay;if(!k)return;
+  const desc=el('cal-desc').value;
+  const amt=parseFloat(el('cal-amt').value)||0;
+  ST.calE[k]={desc,amt};
+  const [yr,mon,day]=k.split('-');
+  const mm=String(Number(mon)+1).padStart(2,'0');
+  const dd=String(day).padStart(2,'0');
+  const dateStr=yr+'-'+mm+'-'+dd;
+  addTxnRow(dateStr,'Expense','',String(amt),desc);
+  renderCal();refreshAll();
+  el('cal-entry-card').style.display='none';
+  toast('Added to Transactions ✓');
+}
+
+// ══ CSV IMPORT ══
+function importCSV(){el('csv-input').click();}
+function handleCSV(e){
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();r.onload=ev=>{
+    const lines=ev.target.result.split('\n').filter(l=>l.trim());
+    lines.slice(1).forEach(l=>{const cols=l.split(',').map(c=>c.trim().replace(/^"|"$/g,''));if(cols.length>=3)addTxnRow(cols[0]||'','Expense',cols[1]||'',cols[2]||'',cols[3]||'');});
+    refreshAll();toast('CSV imported!');
+  };r.readAsText(f);
+}
+
+// ══ PAGE NAV ══
+function goPage(id){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.nt').forEach(t=>t.classList.remove('active'));el('page-'+id)?.classList.add('active');document.querySelectorAll('.nt').forEach(t=>{if(t.textContent.toLowerCase().includes(id.slice(0,3).toLowerCase())||t.getAttribute('onclick')?.includes(id))t.classList.add('active');});}
+
+// ══ THEME ══
+document.querySelectorAll('.thm').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.thm').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.body.className=b.dataset.t;}));
+
+// ══ TOAST ══
+function toast(msg){const t=el('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200);}
+
+// ══ PDF ══
+async function dlPDF(){
+  const{jsPDF}=window.jspdf;const doc=new jsPDF({unit:'mm',format:'a4'});
+  const W=210,P=14;let y=18;
+  const name=el('meta-name').value||'Budget';const month=el('meta-month').value||'';
+  const totalInc=txnSum('Income')+(parseFloat(el('rollover').value)||0);
+  const expTxn=txnSum('Expense'),savTxn=txnSum('Savings'),dbtTxn=txnSum('Debt');
+  doc.setFillColor(14,17,23);doc.rect(0,0,W,34,'F');
+  doc.setTextColor(240,165,0);doc.setFontSize(18);doc.setFont('helvetica','bold');doc.text('TinyWinsPrint — Budget Planner',P,13);
+  doc.setTextColor(180,180,180);doc.setFontSize(9);doc.setFont('helvetica','normal');doc.text(`${name}  ·  ${month}`,P,22);y=40;
+  const bw=(W-P*2-9)/4;
+  [{l:'INCOME',v:fmt(totalInc),c:[6,214,160]},{l:'EXPENSES',v:fmt(expTxn),c:[239,71,111]},{l:'DEBT',v:fmt(dbtTxn),c:[67,97,238]},{l:'SAVINGS',v:fmt(savTxn),c:[240,165,0]}].forEach((b,i)=>{const x=P+i*(bw+3);doc.setFillColor(...b.c);doc.roundedRect(x,y,bw,18,2,2,'F');doc.setTextColor(255,255,255);doc.setFontSize(7);doc.setFont('helvetica','bold');doc.text(b.l,x+4,y+6);doc.setFontSize(11);doc.text(b.v,x+4,y+14);});
+  y+=26;
+  function pdfSec(title,rows,color){if(y>245){doc.addPage();y=18;}doc.setFillColor(...color);doc.circle(P+2,y+2,2,'F');doc.setTextColor(20,20,20);doc.setFontSize(10);doc.setFont('helvetica','bold');doc.text(title,P+6,y+3.5);y+=9;doc.setDrawColor(200,200,200);doc.line(P,y,W-P,y);y+=4;let tot=0;rows.forEach(r=>{if(y>268){doc.addPage();y=18;}doc.setFontSize(9);doc.setFont('helvetica','normal');doc.setTextColor(50,50,50);doc.text(r.l,P+3,y);doc.text(fmt(r.a),W-P,y,{align:'right'});tot+=r.a;y+=6;});doc.setDrawColor(220,220,220);doc.line(P,y,W-P,y);y+=4;doc.setFont('helvetica','bold');doc.setTextColor(...color);doc.text('Total',P+3,y);doc.text(fmt(tot),W-P,y,{align:'right'});y+=10;}
+  function getTxnRows(type){return[...document.querySelectorAll('#txn-body tr')].filter(r=>r.querySelector('select')?.value===type).map(r=>{const ins=r.querySelectorAll('input');return{l:ins[2]?.value||ins[4]?.value||'—',a:parseFloat(r.querySelector('input[type=number]')?.value)||0};}).filter(r=>r.a>0);}
+  pdfSec('Income',[{l:'Total Income',a:totalInc}],[6,214,160]);
+  pdfSec('Expenses',getTxnRows('Expense'),[239,71,111]);
+  pdfSec('Debt Payments',getTxnRows('Debt'),[67,97,238]);
+  pdfSec('Savings',getTxnRows('Savings'),[240,165,0]);
+  doc.setFontSize(7);doc.setTextColor(160,160,160);doc.text('Created with TinyWinsPrint',W/2,290,{align:'center'});
+  doc.save(`monarch-budget-${month||'export'}.pdf`);toast('PDF downloaded!');
+}
+
+// PRINT ALL
+function printAll(){
+  const pages = ['dash','txn','bills','debt','goals','cal'];
+  const labels = ['Dashboard','Transactions','Bills & Savings','Debt Snowball','Goals','Calendar'];
+  let current = document.querySelector('.page.active')?.id?.replace('page-','') || 'dash';
+  let i = 0;
+  function printNext(){
+    if(i >= pages.length){
+      // Restore original page
+      goPage(current);
+      return;
+    }
+    goPage(pages[i]);
+    i++;
+    setTimeout(()=>{
+      window.print();
+      setTimeout(printNext, 500);
+    }, 300);
+  }
+  printNext();
+}
+
+// CSV datalist
+document.head.insertAdjacentHTML('beforeend',`<datalist id="cat-list"><option>Food</option><option>Transport</option><option>Housing</option><option>Utilities</option><option>Entertainment</option><option>Beauty</option><option>Health</option><option>Education</option><option>Clothing</option><option>Salary</option><option>Freelance</option><option>Emergency Fund</option><option>Investments</option><option>Student Loans</option><option>Credit Card</option><option>Mortgage</option></datalist>`);
+</script>
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('../sw.js')
+      .then(r=>console.log('SW registered'))
+      .catch(e=>console.log('SW error',e));
+  });
+}
+</script>
+</body>
+</html>
