@@ -11,15 +11,15 @@
   "icons": [
     {
       "src": "/tinywinsprint/icons/1000040315.png",
-      "sizes": "192x192",
+      "sizes": "192x192 512x512 1080x1080 any",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "/tinywinsprint/icons/1000040315.png",
-      "sizes": "512x512",
+      "sizes": "192x192 512x512 1080x1080 any",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "maskable"
     }
   ],
   "categories": ["finance", "productivity"]
