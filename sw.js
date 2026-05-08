@@ -1,8 +1,10 @@
-const CACHE = 'tinywinsprint-v1';
+const CACHE = 'tinywinsprint-v2';
 const ASSETS = [
-  '/budget-planner/',
-  '/budget-planner/index.html',
-  '/budget-planner/manifest.json',
+  '/tinywinsprint/',
+  '/tinywinsprint/index.html',
+  '/tinywinsprint/budget-planner/',
+  '/tinywinsprint/budget-planner/index.html',
+  '/tinywinsprint/budget-planner/manifest.json',
   'https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600;700&display=swap',
   'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'
 ];
